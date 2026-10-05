@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
 import { UsersService } from '../users/users.service.js';
 import { LoginDto } from './dto/login.dto.js';
-import { RegisterDto } from './dto/register.dto.js';
+import { RegistroDto } from './dto/registro.dto.js';
 
 @Injectable()
 export class AuthService {
@@ -12,12 +12,12 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegistroDto) {
     const passwordHash = await hash(registerDto.password, 10);
 
     return this.usersService.createUser({
       name: registerDto.name,
-      lastName: registerDto.lastName,
+      lastName: registerDto.lastname,
       email: registerDto.email,
       password: passwordHash,
     });
@@ -49,7 +49,7 @@ export class AuthService {
       user: {
         id: user.id,
         name: user.name,
-        lastName: user.lastName,
+        lastName: user.lastname,
         email: user.email,
         role: user.role,
       },

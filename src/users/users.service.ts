@@ -4,50 +4,50 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { CreateUsuarioDto } from './dto/create-usuario.dto.js';
+import { CreateUserDto } from './dto/create-user.dto.js';
 
 @Injectable()
-export class UsuariosService {
+export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async crearUsuario(createUsuarioDto: CreateUsuarioDto) {
-    const usuarioExistente = await this.prisma.usuario.findUnique({
+  async createUser(createUserDto: CreateUserDto) {
+    const userExisting = await this.prisma.user.findUnique({
       where: {
-        email: createUsuarioDto.email,
+        email: createUserDto.email,
       },
     });
 
-    if (usuarioExistente) {
+    if (userExisting) {
       throw new ConflictException(
         'Ya existe un usuario registrado con ese correo',
       );
     }
 
-    return this.prisma.usuario.create({
+    return this.prisma.user.create({
       data: {
-        nombre: createUsuarioDto.nombre,
-        apellido: createUsuarioDto.apellido,
-        email: createUsuarioDto.email,
-        password: createUsuarioDto.password,
+        name: createUserDto.name,
+        lastName: createUserDto.lastName,
+        email: createUserDto.email,
+        password: createUserDto.password,
       },
       select: {
         id: true,
-        nombre: true,
-        apellido: true,
+        name: true,
+        lastName: true,
         email: true,
-        rol: true,
+        role: true,
       },
     });
   }
 
-  async FindAll() {
-    return this.prisma.usuario.findMany({
+  async findAll() {
+    return this.prisma.user.findMany({
       select: {
         id: true,
-        nombre: true,
-        apellido: true,
+        name: true,
+        lastName: true,
         email: true,
-        rol: true,
+        role: true,
       },
       orderBy: {
         id: 'asc',
@@ -56,28 +56,28 @@ export class UsuariosService {
   }
 
   async findOne(id: number) {
-    const usuario = await this.prisma.usuario.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         id,
       },
       select: {
         id: true,
-        nombre: true,
-        apellido: true,
+        name: true,
+        lastName: true,
         email: true,
-        rol: true,
+        role: true,
       },
     });
 
-    if (!usuario) {
+    if (!user) {
       throw new NotFoundException(`No existe un usuario con el ID ${id}`);
     }
 
-    return usuario;
+    return user;
   }
 
   async findByEmail(email: string) {
-    return this.prisma.usuario.findUnique({
+    return this.prisma.user.findUnique({
       where: {
         email,
       },

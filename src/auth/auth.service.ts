@@ -1,57 +1,57 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
-import { UsuariosService } from '../usuarios/usuarios.service.js';
+import { UsersService } from '../users/users.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usuariosService: UsuariosService,
+    private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto) {
     const passwordHash = await hash(registerDto.password, 10);
 
-    return this.usuariosService.crearUsuario({
-      nombre: registerDto.nombre,
-      apellido: registerDto.apellido,
+    return this.usersService.createUser({
+      name: registerDto.name,
+      lastName: registerDto.lastName,
       email: registerDto.email,
       password: passwordHash,
     });
   }
 
   async login(loginDto: LoginDto) {
-    const usuario = await this.usuariosService.findByEmail(loginDto.email);
+    const user = await this.usersService.findByEmail(loginDto.email);
 
-    if (!usuario) {
+    if (!user) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const passwordValida = await compare(loginDto.password, usuario.password);
+    const passwordValida = await compare(loginDto.password, user.password);
 
     if (!passwordValida) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
     const payload = {
-      sub: usuario.id,
-      email: usuario.email,
-      rol: usuario.rol,
+      sub: user.id,
+      email: user.email,
+      role: user.role,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
 
     return {
       access_token: accessToken,
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        apellido: usuario.apellido,
-        email: usuario.email,
-        rol: usuario.rol,
+      user: {
+        id: user.id,
+        name: user.name,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
       },
     };
   }

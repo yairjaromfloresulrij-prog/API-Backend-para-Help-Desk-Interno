@@ -11,3 +11,137 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ==============================
+// ENUMS
+// ==============================
+
+enum Role {
+  ADMIN
+  AGENTE
+  EMPLEADO
+}
+
+enum TicketStatus {
+  ABIERTO
+  EN_PROCESO
+  RESUELTO
+  CERRADO
+}
+
+enum Priority {
+  BAJA
+  MEDIA
+  ALTA
+}
+
+enum NotificationType {
+  TICKET_ASIGNADO
+  TICKET_RESUELTO
+  TICKET_CERRADO
+  NUEVO_COMENTARIO
+}
+
+// ==============================
+// USER
+// ==============================
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(EMPLEADO)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Tickets creados por este usuario
+  createdTickets Ticket[] @relation("TicketCreator")
+
+  // Tickets asignados a este usuario
+  assignedTickets Ticket[] @relation("TicketAssignee")
+
+  // Comentarios escritos por este usuario
+  comments Comment[]
+
+  // Notificaciones recibidas por este usuario
+  notifications Notification[]
+}
+
+// ==============================
+// CATEGORY
+// ==============================
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Tickets pertenecientes a esta categoría
+  tickets Ticket[]
+}
+
+// ==============================
+// TICKET
+// ==============================
+
+model Ticket {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String
+  status      TicketStatus @default(ABIERTO)
+  priority    Priority     @default(MEDIA)
+
+  createdById Int
+  createdBy   User @relation("TicketCreator", fields: [createdById], references: [id])
+
+  assignedToId Int?
+  assignedTo   User? @relation("TicketAssignee", fields: [assignedToId], references: [id])
+
+  categoryId Int
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments      Comment[]
+  notifications Notification[]
+}
+
+// ==============================
+// COMMENT
+// ==============================
+
+model Comment {
+  id      Int    @id @default(autoincrement())
+  content String
+
+  ticketId Int
+  ticket   Ticket @relation(fields: [ticketId], references: [id])
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+// ==============================
+// NOTIFICATION
+// ==============================
+
+model Notification {
+  id      Int              @id @default(autoincrement())
+  message String
+  type    NotificationType
+  read    Boolean          @default(false)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  ticketId Int?
+  ticket   Ticket? @relation(fields: [ticketId], references: [id])
+
+  createdAt DateTime @default(now())
+}

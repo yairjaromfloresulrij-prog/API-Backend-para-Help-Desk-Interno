@@ -1,32 +1,30 @@
-import { Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class RegistroDto {
+import { Transform } from 'class-transformer';
+
+import { IsNotEmpty, IsString, MinLength, IsEmail } from 'class-validator';
+
+export class CrearUsuarioDto {
   @ApiProperty({
     description: 'Nombre del usuario',
-    example: 'Lucas',
+    example: 'Jacinto',
   })
   @Transform(({ value }) => value.trim())
-  @IsNotEmpty({
-    message: 'El nombre es obligatorio',
-  })
   @IsString({
     message: 'El nombre debe ser una cadena de texto',
+  })
+  @IsNotEmpty({
+    message: 'El nombre es obligatorio',
   })
   name: string;
 
   @ApiProperty({
     description: 'Apellido del usuario',
-    example: 'Gonzalez',
+    example: 'Vera',
   })
   @Transform(({ value }) => value.trim())
   @IsString({
     message: 'El apellido debe ser una cadena de texto',
-  })
-  @ApiProperty({
-    description: 'Apellido del usuario',
-    example: 'Gonzalez',
   })
   @IsNotEmpty({
     message: 'El apellido es obligatorio',
@@ -35,13 +33,13 @@ export class RegistroDto {
 
   @ApiProperty({
     description: 'Correo electrónico del usuario',
-    example: 'lucas.gonzalez@gmail.com',
+    example: 'jacinto.vera@gmail.com',
   })
   @Transform(({ value }) => value.trim())
   @IsEmail(
     {},
     {
-      message: 'El correo electrónico debe tener un formato válido',
+      message: 'El correo electrónico no es válido',
     },
   )
   @IsNotEmpty({

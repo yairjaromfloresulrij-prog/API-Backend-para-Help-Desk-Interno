@@ -7,7 +7,7 @@ import {
     IsEmail,
     IsEnum, 
 } from 'class-validator';
-import { Role } from '../../generated/prisma/enum.js';
+import { Role } from '../../../generated/prisma/enums.js';
 
 export class CrearUsuarioDto {
 

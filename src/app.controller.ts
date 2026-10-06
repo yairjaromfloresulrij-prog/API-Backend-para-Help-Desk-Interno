@@ -1,22 +1,12 @@
-import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { UsuariosService } from './usuarios.service';
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service.js';
 
-@Controller('usuarios')
-export class UsuariosController {
-  constructor(private readonly usuariosService: UsuariosService) {}
-
-  @Post()
-  crearUsuario(): string {
-    return this.usuariosService.crearUsuario();
-  }
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
 
   @Get()
-  obtenerUsuarios(): string {
-    return this.usuariosService.obtenerUsuarios();
-  }
-
-  @Get(':id')
-  obtenerUsuarioPorId(@Param('id', ParseIntPipe) id: number): string {
-    return this.usuariosService.obtenerUsuarioPorId(id);
+  getHello(): string {
+    return this.appService.getHello();
   }
 }

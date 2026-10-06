@@ -17,7 +17,7 @@ export class AuthService {
 
     return this.usersService.createUser({
       name: registerDto.name,
-      lastName: registerDto.lastname,
+      lastName: registerDto.lastName,
       email: registerDto.email,
       password: passwordHash,
     });
@@ -49,7 +49,7 @@ export class AuthService {
       user: {
         id: user.id,
         name: user.name,
-        lastName: user.lastname,
+        lastName: user.lastName,
         email: user.email,
         role: user.role,
       },

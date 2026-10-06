@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto.js';
-import { Role } from '../../generated/prisma/enums.js';
+import { Role } from '../generated/prisma/enums.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorator/roles.decorator.js';

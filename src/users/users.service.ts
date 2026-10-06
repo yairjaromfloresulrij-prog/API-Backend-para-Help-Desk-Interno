@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto.js';
+import { Role } from '../generated/prisma/enums.js';
 
 @Injectable()
 export class UsersService {
@@ -40,8 +41,9 @@ export class UsersService {
     });
   }
 
-  async findAll() {
+  async findAll(role?: Role) {
     return this.prisma.user.findMany({
+      where: role ? { role } : undefined,
       select: {
         id: true,
         name: true,

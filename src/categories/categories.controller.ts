@@ -17,6 +17,7 @@ import {RolesGuard} from '../auth/guards/roles.guard.js';
 import {ActualizarCategoryDto} from './dto/actualizar-category.dto.js';
 import {CrearCategoryDto} from './dto/crear-category.dto.js';
 import { CategoriesService } from './categories.service.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 
 @Controller('categories')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -27,6 +28,7 @@ export class CategoriesController {
   findAll() {
     return this.categoriesService.findAll();
   }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.categoriesService.findOne(id);

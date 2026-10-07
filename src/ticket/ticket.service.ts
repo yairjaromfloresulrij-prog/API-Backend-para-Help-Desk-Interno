@@ -7,6 +7,9 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { Role } from '../generated/prisma/enums.js';
+
 @Injectable()
 export class TicketService {
   constructor(private readonly prisma: PrismaService) {}
@@ -34,11 +37,15 @@ export class TicketService {
     });
   }
 
-  findAll() {
-    return `This action returns all ticket`;
+  async findAll() {
+    return this.prisma.ticket.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return `This action returns a #${id} ticket`;
   }
 
@@ -90,7 +97,7 @@ export class TicketService {
     });
   }
 
-  remove(id: number) {
+  async remove(id: number) {
     return `This action removes a #${id} ticket`;
   }
 }

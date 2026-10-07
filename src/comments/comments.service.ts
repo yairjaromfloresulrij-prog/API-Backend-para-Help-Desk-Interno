@@ -1,26 +1,92 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
-import { UpdateCommentDto } from './dto/update-comment.dto.js';
 
 @Injectable()
 export class CommentsService {
-  create(createCommentDto: CreateCommentDto) {
-    return 'This action adds a new comment';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async create(
+    ticketId: number,
+    createCommentDto: CreateCommentDto,
+    userId: number,
+    userRole: string,
+  ) {
+    const ticket = await this.prisma.ticket.findFirst({
+      where:
+        userRole === 'EMPLEADO'
+          ? {
+              id: ticketId,
+              createdById: userId,
+            }
+          : {
+              id: ticketId,
+            },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('El ticket no existe');
+    }
+
+    return this.prisma.comment.create({
+      data: {
+        content: createCommentDto.content,
+        ticketId: ticket.id,
+        userId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all comments`;
-  }
+  async findAll(
+    ticketId: number,
+    userId: number,
+    userRole: string,
+  ) {
+    const ticket = await this.prisma.ticket.findFirst({
+      where:
+        userRole === 'EMPLEADO'
+          ? {
+              id: ticketId,
+              createdById: userId,
+            }
+          : {
+              id: ticketId,
+            },
+    });
 
-  findOne(id: number) {
-    return `This action returns a #${id} comment`;
-  }
+    if (!ticket) {
+      throw new NotFoundException('El ticket no existe');
+    }
 
-  update(id: number, updateCommentDto: UpdateCommentDto) {
-    return `This action updates a #${id} comment`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} comment`;
+    return this.prisma.comment.findMany({
+      where: {
+        ticketId,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
   }
 }

@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { Role } from '../generated/prisma/enums.js';
+import { AssignTicketDto } from './dto/assign-ticket.dto.js';
 
 @Injectable()
 export class TicketService {
@@ -113,4 +114,42 @@ export class TicketService {
   async remove(id: number) {
     return `This action removes a #${id} ticket`;
   }
+  async assign(id:number, assignTicketDto: AssignTicketDto) {
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+    });
+    if (!ticket) {
+      throw new NotFoundException('El ticket no existe');
+    }
+    
+    const agent = await this.prisma.user.findUnique({
+      where: { 
+        id: assignTicketDto.agentId,
+      },
+    });
+    
+    if (!agent || agent.role !== Role.AGENTE) {
+      throw new BadRequestException(
+        'El agente no existe o no tiene el rol adecuado',
+      );
+    }
+    return this.prisma.ticket.update({
+      where: { id },
+      data: {
+        assignedToId: agent.id,
+      },
+      include: {
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
+  }
 }
+

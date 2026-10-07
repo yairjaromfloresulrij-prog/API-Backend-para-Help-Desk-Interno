@@ -6,6 +6,7 @@ import { AppService } from './app.service.js';
 import { UsersModule } from './users/users.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
+import { TicketModule } from './ticket/ticket.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -24,6 +25,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     AuthModule,
     UsersModule,
     CategoriesModule,
+    TicketModule,
   ],
   controllers: [AppController],
   providers: [AppService],

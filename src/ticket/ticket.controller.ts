@@ -38,8 +38,14 @@ export class TicketController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTicketDto: UpdateTicketDto) {
-    return this.ticketService.update(+id, updateTicketDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateTicketDto: UpdateTicketDto,
+    @Req() req: Request,
+  ) {
+    const userRole = (req.user as { role: string }).role;
+
+    return this.ticketService.update(+id, updateTicketDto, userRole);
   }
 
   @Delete(':id')

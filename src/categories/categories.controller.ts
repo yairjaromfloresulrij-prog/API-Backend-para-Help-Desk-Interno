@@ -1,6 +1,6 @@
-import { 
+import {
   Controller,
-  Get, 
+  Get,
   Param,
   Body,
   Delete,
@@ -8,14 +8,14 @@ import {
   Patch,
   Post,
   UseGuards,
- } from '@nestjs/common';
-import {Role} from '../../generated/prisma/enums.js'
+} from '@nestjs/common';
+import { Role } from '../generated/prisma/enums.js';
 
-import {Roles} from '../auth/decorator/roles.decorator.js';
-import {JwtAuthGuard} from '../auth/guards/jwt-auth.guard.js';
-import {RolesGuard} from '../auth/guards/roles.guard.js';
-import {ActualizarCategoryDto} from './dto/actualizar-category.dto.js';
-import {CrearCategoryDto} from './dto/crear-category.dto.js';
+import { Roles } from '../auth/decorator/roles.decorator.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
+import { ActualizarCategoryDto } from './dto/actualizar-category.dto.js';
+import { CrearCategoryDto } from './dto/crear-category.dto.js';
 import { CategoriesService } from './categories.service.js';
 
 @Controller('categories')
@@ -39,7 +39,10 @@ export class CategoriesController {
   }
   @Patch(':id')
   @Roles(Role.ADMIN, Role.AGENTE)
-  update(@Param('id', ParseIntPipe) id: number, @Body() actualizarCategoryDto: ActualizarCategoryDto) {
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() actualizarCategoryDto: ActualizarCategoryDto,
+  ) {
     return this.categoriesService.update(id, actualizarCategoryDto);
   }
   @Delete(':id')

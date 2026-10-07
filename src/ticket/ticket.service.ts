@@ -36,16 +36,30 @@ export class TicketService {
     });
   }
 
-  async findAll() {
+  async findAll(userId: number, userRole: string) {
     return this.prisma.ticket.findMany({
+      where: 
+       userRole === 'EMPLEADO'
+        ? { createdById: userId }
+        : undefined,
       orderBy: {
         createdAt: 'desc',
       },
     });
   }
 
-  async findOne(id: number) {
-    return `This action returns a #${id} ticket`;
+  async findOne(id: number, userId: number, userRole: string) {
+    const ticket = await this.prisma.ticket.findFirst({
+      where:
+        userRole === 'EMPLEADO'
+          ? { id, createdById: userId }
+          : { id },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('El ticket no existe');
+    }
+    return ticket;
   }
 
   async update(id: number, updateTicketDto: UpdateTicketDto, userRole: string) {

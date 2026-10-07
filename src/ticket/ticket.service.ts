@@ -7,7 +7,6 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
-import { PrismaService } from '../prisma/prisma.service.js';
 import { Role } from '../generated/prisma/enums.js';
 
 @Injectable()

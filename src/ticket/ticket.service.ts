@@ -7,12 +7,16 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
-import { Role } from '../generated/prisma/enums.js';
+import { Role, NotificationType } from '../generated/prisma/enums.js';
 import { AssignTicketDto } from './dto/assign-ticket.dto.js';
+import { NotificationService } from '../notifications/notification.service.js';
 
 @Injectable()
 export class TicketService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async create(createTicketDto: CreateTicketDto, userId: number) {
     const category = await this.prisma.category.findUnique({
@@ -100,8 +104,7 @@ export class TicketService {
         `No se puede cambiar el ticket de ${ticket.status} a ${updateTicketDto.status}`,
       );
     }
-
-    return this.prisma.ticket.update({
+    const updatedTicket = await this.prisma.ticket.update({
       where: {
         id,
       },
@@ -109,6 +112,23 @@ export class TicketService {
         status: updateTicketDto.status,
       },
     });
+    if (updateTicketDto.status === 'RESUELTO') {
+      await this.notificationService.enviar(
+        ticket.createdById,
+        'Tu ticket ha sido resuelto.',
+        NotificationType.TICKET_RESUELTO,
+        ticket.id
+      );
+    }
+    if (updateTicketDto.status === 'CERRADO') {
+      await this.notificationService.enviar(
+        ticket.createdById,
+        'Tu ticket ha sido cerrado.',
+        NotificationType.TICKET_CERRADO,
+        ticket.id
+      );
+    }
+    return updatedTicket;
   }
 
   async remove(id: number) {

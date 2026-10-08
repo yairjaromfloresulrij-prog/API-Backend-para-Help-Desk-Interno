@@ -5,8 +5,8 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Req,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -18,6 +18,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
+
 import { UsersService } from './users.service.js';
 import { CrearUsuarioDto } from './dto/crear-usuario.dto.js';
 import { Role } from '../generated/prisma/enums.js';
@@ -99,6 +100,7 @@ export class UsersController {
   findAll(@Query() filtros: FiltroUsuarioDto) {
     return this.usersService.findAll(filtros.role);
   }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({

@@ -1,4 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegistroDto } from './dto/registro.dto.js';
@@ -13,6 +15,20 @@ export class AuthController {
   @ApiOperation({
     summary: 'Registrar usuario',
     description: 'Permite a un nuevo usuario registrarse en el sistema.',
+  })
+  @ApiBody({
+    type: RegistroDto,
+    examples: {
+      ejemplo: {
+        summary: 'Ejemplo de registro',
+        value: {
+          name: 'Sofía',
+          lastName: 'Martínez',
+          email: 'sofia.martinez@empresa.com',
+          password: 'Segura123',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 201,

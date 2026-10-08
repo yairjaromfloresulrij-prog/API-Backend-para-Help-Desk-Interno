@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto.js';
-import { Role, NotificationType } from '../generated/prisma/enums.js';
+import { Role, NotificationType, TicketStatus } from '../generated/prisma/enums.js';
 import { AssignTicketDto } from './dto/assign-ticket.dto.js';
 import { NotificationService } from '../notifications/notification.service.js';
 
@@ -261,4 +261,63 @@ async assign(id: number, assignTicketDto: AssignTicketDto) {
 
   return updatedTicket;
 }
+  async getMetrics() {
+    const [totalTickets, ticketsByCategory, ticketsByStatus, categories] =
+      await Promise.all([
+        this.prisma.ticket.count(),
+
+        this.prisma.ticket.groupBy({
+          by: ['categoryId'],
+          _count: {
+            _all: true,
+          },
+        }),
+
+        this.prisma.ticket.groupBy({
+          by: ['status'],
+          _count: {
+            _all: true,
+          },
+        }),
+
+        this.prisma.category.findMany({
+          select: {
+            id: true,
+            name: true,
+          },
+          orderBy: {
+            id: 'asc',
+          },
+        }),
+      ]);
+
+    const byCategory = categories.map((category) => {
+      const categoryMetric = ticketsByCategory.find(
+        (item) => item.categoryId === category.id,
+      );
+
+      return {
+        categoryId: category.id,
+        categoryName: category.name,
+        total: categoryMetric?._count._all ?? 0,
+      };
+    });
+
+    const byStatus = Object.values(TicketStatus).map((status) => {
+      const statusMetric = ticketsByStatus.find(
+        (item) => item.status === status,
+      );
+
+      return {
+        status,
+        total: statusMetric?._count._all ?? 0,
+      };
+    });
+
+    return {
+      totalTickets,
+      byCategory,
+      byStatus,
+    };
+  }
 }

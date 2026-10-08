@@ -35,6 +35,23 @@ export class CommentsController {
       user.sub,
       user.role,
     );
+    }
+  @Get('ticket/:ticketId')
+  @UseGuards(JwtAuthGuard)
+  findHistorial(
+    @Param('ticketId', ParseIntPipe) ticketId: number,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.commentsService.findHistorial(
+      ticketId,
+      request.user.id,
+      request.user.role,
+    );
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.commentsService.findOne(+id);
   }
 
   @Get()

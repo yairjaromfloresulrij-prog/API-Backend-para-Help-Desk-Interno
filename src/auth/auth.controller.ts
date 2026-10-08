@@ -4,8 +4,9 @@ import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegistroDto } from './dto/registro.dto.js';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Autenticación')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -13,7 +14,7 @@ export class AuthController {
   @Post('register')
   @ApiOperation({
     summary: 'Registrar usuario',
-    description: 'Registra un nuevo usuario en el sistema.',
+    description: 'Permite a un nuevo usuario registrarse en el sistema.',
   })
   @ApiBody({
     type: RegistroDto,
@@ -48,28 +49,19 @@ export class AuthController {
   @Post('login')
   @ApiOperation({
     summary: 'Iniciar sesión',
-    description:
-      'Autentica al usuario y devuelve un token JWT para acceder a los endpoints protegidos.',
-  })
-  @ApiBody({
-    type: LoginDto,
-    examples: {
-      ejemplo: {
-        summary: 'Ejemplo de inicio de sesión',
-        value: {
-          email: 'sofia.martinez@empresa.com',
-          password: 'Segura123',
-        },
-      },
-    },
+    description: 'Permite a un usuario existente iniciar sesión en el sistema.',
   })
   @ApiResponse({
-    status: 201,
-    description: 'Inicio de sesión exitoso. Se devuelve un token JWT.',
+    status: 200,
+    description: 'Inicio de sesión exitoso.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Los datos enviados no son válidos.',
   })
   @ApiResponse({
     status: 401,
-    description: 'Correo electrónico o contraseña incorrectos.',
+    description: 'Credenciales inválidas.',
   })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);

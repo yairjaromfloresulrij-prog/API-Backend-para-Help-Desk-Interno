@@ -33,7 +33,7 @@ type JwtUser = {
   role: Role;
 };
 
-@ApiTags('Usuarios')
+@ApiTags('Users')
 @ApiBearerAuth()
 @Controller('users')
 export class UsersController {
@@ -43,12 +43,16 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiOperation({
-    summary: 'Crear un usuario',
-    description: 'Permite al administrador crear un nuevo usuario.',
+    summary: 'Crear usuario',
+    description: 'Permite al administrador crear un nuevo usuario del sistema.',
   })
   @ApiResponse({
     status: 201,
     description: 'Usuario creado correctamente.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Los datos enviados no son válidos.',
   })
   @ApiResponse({
     status: 401,
@@ -71,13 +75,15 @@ export class UsersController {
   @Roles('ADMIN', 'AGENTE')
   @ApiOperation({
     summary: 'Listar usuarios',
-    description: 'Obtiene los usuarios registrados en el sistema.',
+    description:
+      'Obtiene la lista de usuarios. Permite filtrar los resultados por rol.',
   })
   @ApiQuery({
     name: 'role',
     required: false,
     enum: Role,
     description: 'Filtrar usuarios por rol.',
+    example: 'AGENTE',
   })
   @ApiResponse({
     status: 200,
@@ -99,7 +105,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: 'Obtener mi perfil',
-    description: 'Obtiene los datos del usuario autenticado.',
+    description:
+      'Obtiene la información del usuario autenticado a partir del token JWT.',
   })
   @ApiResponse({
     status: 200,
@@ -107,7 +114,7 @@ export class UsersController {
   })
   @ApiResponse({
     status: 401,
-    description: 'No autenticado.',
+    description: 'Token inválido o no proporcionado.',
   })
   findMe(@Req() req: Request & { user: JwtUser }) {
     return this.usersService.findOne(req.user.sub);
@@ -118,11 +125,13 @@ export class UsersController {
   @Roles('ADMIN', 'AGENTE')
   @ApiOperation({
     summary: 'Obtener usuario por ID',
-    description: 'Obtiene la información de un usuario específico.',
+    description:
+      'Obtiene la información de un usuario específico mediante su identificador.',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID del usuario',
+    type: Number,
+    description: 'Identificador único del usuario.',
     example: 1,
   })
   @ApiResponse({
@@ -135,7 +144,7 @@ export class UsersController {
   })
   @ApiResponse({
     status: 403,
-    description: 'No tienes permisos para consultar este usuario.',
+    description: 'No tienes permisos para consultar usuarios.',
   })
   @ApiResponse({
     status: 404,

@@ -8,11 +8,14 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { CommentsService } from './comments.service.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { Role } from '../generated/prisma/enums.js';
 
+@ApiBearerAuth()
 @Controller('tickets/:ticketId/comments')
 @UseGuards(JwtAuthGuard)
 export class CommentsController {
@@ -37,21 +40,24 @@ export class CommentsController {
     );
     }
   @Get('ticket/:ticketId')
-  @UseGuards(JwtAuthGuard)
   findHistorial(
     @Param('ticketId', ParseIntPipe) ticketId: number,
-    @Req() request: AuthenticatedRequest,
+    @Req() req: Request,
   ) {
+    const user = req.user as {
+      sub: number;
+      role: string;
+    };
     return this.commentsService.findHistorial(
       ticketId,
-      request.user.id,
-      request.user.role,
+      user.sub,
+      user.role as any,
     );
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentsService.findOne(+id);
+  findOne(@Param('id') id: number) {
+    return this.commentsService.findOne(id);
   }
 
   @Get()

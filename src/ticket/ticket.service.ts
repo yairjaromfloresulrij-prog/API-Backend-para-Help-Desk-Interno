@@ -224,7 +224,7 @@ async assign(id: number, assignTicketDto: AssignTicketDto) {
 
   const agent = await this.prisma.user.findUnique({
     where: {
-      id: assignTicketDto.agentId,
+      id: assignTicketDto.assignedToId,
     },
   });
 

@@ -12,6 +12,24 @@ import { Role } from '../generated/prisma/enums.js';
 export class CommentsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async create(
+    ticketId: number,
+    createCommentDto: CreateCommentDto,
+    userId: number,
+    userRole: string,
+  ) {
+    const ticket = await this.prisma.ticket.findFirst({
+      where:
+        userRole === 'EMPLEADO'
+          ? {
+              id: ticketId,
+              createdById: userId,
+            }
+          : {
+              id: ticketId,
+            },
+    });
+
   create(createCommentDto: CreateCommentDto) {
     return 'This action adds a new comment';
   }
@@ -63,15 +81,69 @@ export class CommentsService {
     return `This action returns all comments`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} comment`;
+    if (!ticket) {
+      throw new NotFoundException('El ticket no existe');
+    }
+
+    return this.prisma.comment.create({
+      data: {
+        content: createCommentDto.content,
+        ticketId: ticket.id,
+        userId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
   }
 
-  update(id: number, updateCommentDto: UpdateCommentDto) {
-    return `This action updates a #${id} comment`;
-  }
+  async findAll(
+    ticketId: number,
+    userId: number,
+    userRole: string,
+  ) {
+    const ticket = await this.prisma.ticket.findFirst({
+      where:
+        userRole === 'EMPLEADO'
+          ? {
+              id: ticketId,
+              createdById: userId,
+            }
+          : {
+              id: ticketId,
+            },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} comment`;
+    if (!ticket) {
+      throw new NotFoundException('El ticket no existe');
+    }
+
+    return this.prisma.comment.findMany({
+      where: {
+        ticketId,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
+    });
   }
 }

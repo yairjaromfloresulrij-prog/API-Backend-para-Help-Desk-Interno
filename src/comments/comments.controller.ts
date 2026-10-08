@@ -1,46 +1,41 @@
 import {
+  Body,
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
-  Delete,
   ParseIntPipe,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { CommentsService } from './comments.service.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
-import { UpdateCommentDto } from './dto/update-comment.dto.js';
-import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { Role } from '../generated/prisma/enums.js';
 
-type JwtUser = {
-  id: number;
-  email: string;
-  role: Role;
-};
-
-type AuthenticatedRequest = Request & {
-  user: JwtUser;
-};
-
-@Controller('comments')
+@Controller('tickets/:ticketId/comments')
+@UseGuards(JwtAuthGuard)
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
-  create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentsService.create(createCommentDto);
-  }
+  create(
+    @Param('ticketId', ParseIntPipe) ticketId: number,
+    @Body() createCommentDto: CreateCommentDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as {
+      sub: number;
+      role: string;
+    };
 
-  @Get()
-  findAll() {
-    return this.commentsService.findAll();
-  }
-
+    return this.commentsService.create(
+      ticketId,
+      createCommentDto,
+      user.sub,
+      user.role,
+    );
+    }
   @Get('ticket/:ticketId')
   @UseGuards(JwtAuthGuard)
   findHistorial(
@@ -59,13 +54,20 @@ export class CommentsController {
     return this.commentsService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(+id, updateCommentDto);
-  }
+  @Get()
+  findAll(
+    @Param('ticketId', ParseIntPipe) ticketId: number,
+    @Req() req: Request,
+  ) {
+    const user = req.user as {
+      sub: number;
+      role: string;
+    };
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.commentsService.remove(+id);
+    return this.commentsService.findAll(
+      ticketId,
+      user.sub,
+      user.role,
+    );
   }
 }

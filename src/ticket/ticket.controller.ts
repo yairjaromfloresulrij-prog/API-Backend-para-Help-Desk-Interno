@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+
 import {
   ApiBearerAuth,
   ApiBody,
@@ -21,13 +22,11 @@ import {
 import type { Request } from 'express';
 
 import { TicketService } from './ticket.service.js';
-
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Roles } from '../auth/decorator/roles.decorator.js';
-
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
-import { UpdateTicketDto } from './dto/update-ticket.dto.js';
+import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto.js';
 import { AssignTicketDto } from './dto/assign-ticket.dto.js';
 
 @ApiTags('Tickets')
@@ -139,36 +138,35 @@ export class TicketController {
     return this.ticketService.findOne(+id, user.sub, user.role);
   }
 
-  @Patch(':id')
+  @Patch(':id/status')
   @ApiOperation({
-    summary: 'Actualizar un ticket',
+    summary: 'Cambiar estado de un ticket',
     description:
-      'Actualiza la información de un ticket según los permisos del usuario.',
+      'Permite a un administrador cambiar el estado de cualquier ticket y a un agente cambiar el estado de los tickets que tiene asignados.',
   })
   @ApiParam({
     name: 'id',
-    description: 'ID del ticket a actualizar',
+    description: 'ID del ticket',
     example: 1,
   })
   @ApiBody({
-    type: UpdateTicketDto,
+    type: UpdateTicketStatusDto,
     examples: {
       ejemplo: {
-        summary: 'Ejemplo de actualización',
+        summary: 'Ejemplo de cambio de estado',
         value: {
-          title: 'No funciona el mouse USB',
-          description:
-            'El mouse continúa sin funcionar después de conectarlo nuevamente.',
-          priority: 'ALTA',
           status: 'EN_PROCESO',
-          categoryId: 1,
         },
       },
     },
   })
   @ApiResponse({
     status: 200,
-    description: 'Ticket actualizado correctamente.',
+    description: 'Estado del ticket actualizado correctamente.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'El cambio de estado no es válido.',
   })
   @ApiResponse({
     status: 401,
@@ -176,20 +174,28 @@ export class TicketController {
   })
   @ApiResponse({
     status: 403,
-    description: 'No tienes permisos para actualizar este ticket.',
+    description: 'No tienes permisos para cambiar el estado de este ticket.',
   })
   @ApiResponse({
     status: 404,
     description: 'Ticket no encontrado.',
   })
-  update(
+  updateStatus(
     @Param('id') id: string,
-    @Body() updateTicketDto: UpdateTicketDto,
+    @Body() updateTicketStatusDto: UpdateTicketStatusDto,
     @Req() req: Request,
   ) {
-    const userRole = (req.user as { role: string }).role;
+    const user = req.user as {
+      sub: number;
+      role: string;
+    };
 
-    return this.ticketService.update(+id, updateTicketDto, userRole);
+    return this.ticketService.updateStatus(
+      +id,
+      updateTicketStatusDto,
+      user.sub,
+      user.role,
+    );
   }
 
   @Patch(':id/assign')

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
-import { UpdateTicketDto } from './dto/update-ticket.dto.js';
+import { UpdateTicketStatusDto } from './dto/update-ticket-status.dto.js';
 import { Role, NotificationType } from '../generated/prisma/enums.js';
 import { AssignTicketDto } from './dto/assign-ticket.dto.js';
 import { NotificationService } from '../notifications/notification.service.js';
@@ -43,7 +43,12 @@ export class TicketService {
 
   async findAll(userId: number, userRole: string) {
     return this.prisma.ticket.findMany({
-      where: userRole === 'EMPLEADO' ? { createdById: userId } : undefined,
+      where:
+        userRole === 'ADMIN'
+          ? undefined
+          : userRole === 'AGENTE'
+            ? { assignedToId: userId }
+            : { createdById: userId },
       include: {
         category: true,
         createdBy: {
@@ -104,7 +109,12 @@ export class TicketService {
     return ticket;
   }
 
-  async update(id: number, updateTicketDto: UpdateTicketDto, userRole: string) {
+  async updateStatus(
+    id: number,
+    updateTicketStatusDto: UpdateTicketStatusDto,
+    userId: number,
+    userRole: string,
+  ) {
     if (userRole !== 'ADMIN' && userRole !== 'AGENTE') {
       throw new ForbiddenException(
         'Solo ADMIN o AGENTE pueden cambiar el estado del ticket',
@@ -121,9 +131,9 @@ export class TicketService {
       throw new NotFoundException('El ticket no existe');
     }
 
-    if (!updateTicketDto.status) {
-      throw new BadRequestException(
-        'Debes indicar un estado para actualizar el ticket',
+    if (userRole === 'AGENTE' && ticket.assignedToId !== userId) {
+      throw new ForbiddenException(
+        'Solo puedes cambiar el estado de los tickets que tienes asignados',
       );
     }
 
@@ -136,20 +146,22 @@ export class TicketService {
 
     const estadosPermitidos = transicionesPermitidas[ticket.status];
 
-    if (!estadosPermitidos.includes(updateTicketDto.status)) {
+    if (!estadosPermitidos.includes(updateTicketStatusDto.status)) {
       throw new BadRequestException(
-        `No se puede cambiar el ticket de ${ticket.status} a ${updateTicketDto.status}`,
+        `No se puede cambiar el ticket de ${ticket.status} a ${updateTicketStatusDto.status}`,
       );
     }
+
     const updatedTicket = await this.prisma.ticket.update({
       where: {
         id,
       },
       data: {
-        status: updateTicketDto.status,
+        status: updateTicketStatusDto.status,
       },
     });
-    if (updateTicketDto.status === 'RESUELTO') {
+
+    if (updateTicketStatusDto.status === 'RESUELTO') {
       await this.notificationService.enviar(
         ticket.createdById,
         'Tu ticket ha sido resuelto.',
@@ -157,7 +169,8 @@ export class TicketService {
         ticket.id,
       );
     }
-    if (updateTicketDto.status === 'CERRADO') {
+
+    if (updateTicketStatusDto.status === 'CERRADO') {
       await this.notificationService.enviar(
         ticket.createdById,
         'Tu ticket ha sido cerrado.',
@@ -165,23 +178,54 @@ export class TicketService {
         ticket.id,
       );
     }
+
     return updatedTicket;
   }
 
   async remove(id: number) {
-    return `This action removes a #${id} ticket`;
+    const ticket = await this.prisma.ticket.findUnique({
+      where: { id },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('El ticket no existe');
+    }
+
+    await this.prisma.notification.deleteMany({
+      where: {
+        ticketId: id,
+      },
+    });
+
+    await this.prisma.comment.deleteMany({
+      where: {
+        ticketId: id,
+      },
+    });
+
+    await this.prisma.ticket.delete({
+      where: {
+        id,
+      },
+    });
+
+    return {
+      message: 'Ticket eliminado correctamente',
+    };
   }
+
   async assign(id: number, assignTicketDto: AssignTicketDto) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
     });
+
     if (!ticket) {
       throw new NotFoundException('El ticket no existe');
     }
 
     const agent = await this.prisma.user.findUnique({
       where: {
-        id: assignTicketDto.agentId,
+        id: assignTicketDto.assignedToId,
       },
     });
 
@@ -190,6 +234,7 @@ export class TicketService {
         'El agente no existe o no tiene el rol adecuado',
       );
     }
+
     return this.prisma.ticket.update({
       where: { id },
       data: {

@@ -43,10 +43,28 @@ export class TicketService {
 
   async findAll(userId: number, userRole: string) {
     return this.prisma.ticket.findMany({
-      where: 
-       userRole === 'EMPLEADO'
-        ? { createdById: userId }
-        : undefined,
+      where: userRole === 'EMPLEADO' ? { createdById: userId } : undefined,
+      include: {
+        category: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: 'desc',
       },
@@ -55,15 +73,34 @@ export class TicketService {
 
   async findOne(id: number, userId: number, userRole: string) {
     const ticket = await this.prisma.ticket.findFirst({
-      where:
-        userRole === 'EMPLEADO'
-          ? { id, createdById: userId }
-          : { id },
+      where: userRole === 'EMPLEADO' ? { id, createdById: userId } : { id },
+      include: {
+        category: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            name: true,
+            lastName: true,
+            email: true,
+            role: true,
+          },
+        },
+      },
     });
 
     if (!ticket) {
       throw new NotFoundException('El ticket no existe');
     }
+
     return ticket;
   }
 
@@ -117,7 +154,7 @@ export class TicketService {
         ticket.createdById,
         'Tu ticket ha sido resuelto.',
         NotificationType.TICKET_RESUELTO,
-        ticket.id
+        ticket.id,
       );
     }
     if (updateTicketDto.status === 'CERRADO') {
@@ -125,7 +162,7 @@ export class TicketService {
         ticket.createdById,
         'Tu ticket ha sido cerrado.',
         NotificationType.TICKET_CERRADO,
-        ticket.id
+        ticket.id,
       );
     }
     return updatedTicket;
@@ -134,20 +171,20 @@ export class TicketService {
   async remove(id: number) {
     return `This action removes a #${id} ticket`;
   }
-  async assign(id:number, assignTicketDto: AssignTicketDto) {
+  async assign(id: number, assignTicketDto: AssignTicketDto) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id },
     });
     if (!ticket) {
       throw new NotFoundException('El ticket no existe');
     }
-    
+
     const agent = await this.prisma.user.findUnique({
-      where: { 
+      where: {
         id: assignTicketDto.agentId,
       },
     });
-    
+
     if (!agent || agent.role !== Role.AGENTE) {
       throw new BadRequestException(
         'El agente no existe o no tiene el rol adecuado',
@@ -172,4 +209,3 @@ export class TicketService {
     });
   }
 }
-

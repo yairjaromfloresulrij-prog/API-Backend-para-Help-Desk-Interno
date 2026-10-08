@@ -1,38 +1,42 @@
 import {
-    ConnectedSocket,
-    MessageBody,
-    SubscribeMessage,
-    WebSocketGateway,
-    WebSocketServer,
+  ConnectedSocket,
+  MessageBody,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({
-    cors: {
-        origin: '*',
-    },
+  cors: {
+    origin: '*',
+  },
 })
 export class NotificationGateway {
-    @WebSocketServer()
-    server: Server;
+  @WebSocketServer()
+  server: Server;
 
-    @SubscribeMessage('registrarUsuario')
-    handleRegistrarUser(
-        @MessageBody() userId: number,
-        @ConnectedSocket() client: Socket,
-    ) {
-        client.join(`user-${userId}`);
+  @SubscribeMessage('registrarUsuario')
+  handleRegistrarUser(
+    @MessageBody() userId: number,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const room = `user-${userId}`;
 
-         return {
-        event: 'usuarioRegistrado',
-        data: {
-            userId,
-        },
+    client.join(room);
+
+    return {
+      event: 'usuarioRegistrado',
+      data: {
+        userId,
+        room,
+      },
     };
-    }
-    enviarNotificacion(userId: number, notification: unknown) {
-    this.server.to(`usuario:${userId}`).emit('notificacion', notification);
-}
-}
+  }
 
-
+  enviarNotificacion(userId: number, notification: unknown) {
+    this.server
+      .to(`user-${userId}`)
+      .emit('notificacion', notification);
+  }
+}

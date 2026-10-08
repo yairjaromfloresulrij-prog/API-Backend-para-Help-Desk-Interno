@@ -240,7 +240,8 @@ export class TicketController {
   assign(@Param('id') id: string, @Body() assignTicketDto: AssignTicketDto) {
     return this.ticketService.assign(+id, assignTicketDto);
   }
-
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN')
   @Delete(':id')
   @ApiOperation({
     summary: 'Eliminar un ticket',

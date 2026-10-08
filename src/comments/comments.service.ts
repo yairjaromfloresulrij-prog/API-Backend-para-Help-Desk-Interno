@@ -32,11 +32,11 @@ export class CommentsService {
           : {
               id: ticketId,
             },
-          select: {
-            id: true,
-            createdById: true,
-            assignedToId: true,
-          },
+      select: {
+        id: true,
+        createdById: true,
+        assignedToId: true,
+      },
     });
 
     if (!ticket) {
@@ -121,7 +121,7 @@ export class CommentsService {
       },
     });
   }
-  async findAll (ticketId: number, userId: number, userRole: string) {
+  async findAll(ticketId: number, userId: number, userRole: string) {
     const ticket = await this.prisma.ticket.findFirst({
       where:
         userRole === 'EMPLEADO'
@@ -159,7 +159,7 @@ export class CommentsService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId: number, userRole: string) {
     const comment = await this.prisma.comment.findUnique({
       where: {
         id,
@@ -174,11 +174,30 @@ export class CommentsService {
             role: true,
           },
         },
+        ticket: {
+          select: {
+            id: true,
+            createdById: true,
+          },
+        },
       },
     });
+
     if (!comment) {
       throw new NotFoundException('El comentario no existe');
     }
-    return comment;
+
+    if (userRole === 'EMPLEADO' && comment.ticket.createdById !== userId) {
+      throw new ForbiddenException(
+        'No tienes permiso para ver este comentario',
+      );
+    }
+
+    return {
+      id: comment.id,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      user: comment.user,
+    };
   }
 }

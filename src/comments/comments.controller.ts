@@ -22,6 +22,7 @@ import type { Request } from 'express';
 import { CommentsService } from './comments.service.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { Role } from '../generated/prisma/enums.js';
 
 @ApiTags('Comentarios')
 @ApiBearerAuth()
@@ -130,7 +131,7 @@ export class CommentsController {
     return this.commentsService.findHistorial(
       ticketId,
       user.sub,
-      user.role as any,
+      user.role as Role,
     );
   }
 
@@ -156,8 +157,13 @@ export class CommentsController {
     status: 404,
     description: 'Comentario no encontrado.',
   })
-  findOne(@Param('id') id: number) {
-    return this.commentsService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
+    const user = req.user as {
+      sub: number;
+      role: string;
+    };
+
+    return this.commentsService.findOne(id, user.sub, user.role);
   }
 
   @Get()

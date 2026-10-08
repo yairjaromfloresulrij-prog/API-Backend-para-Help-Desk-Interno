@@ -106,6 +106,30 @@ export class TicketController {
 
     return this.ticketService.findAll(user.sub, user.role);
   }
+  
+  @Get('metrics')
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'AGENTE')
+  @ApiOperation({
+    summary: 'Consultar métricas de tickets',
+    description:
+      'Obtiene métricas agrupadas de los tickets por categoría y estado. Disponible para ADMIN y AGENTE.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Métricas obtenidas correctamente.',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'No autenticado.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Solo ADMIN o AGENTE pueden consultar las métricas.',
+  })
+  getMetrics() {
+    return this.ticketService.getMetrics();
+  }
 
   @Get(':id')
   @ApiOperation({

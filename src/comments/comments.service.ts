@@ -6,11 +6,15 @@ import {
 import { CreateCommentDto } from './dto/create-comment.dto.js';
 import { UpdateCommentDto } from './dto/update-comment.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { Role } from '../generated/prisma/enums.js';
+import { Role, NotificationType } from '../generated/prisma/enums.js';
+import { NotificationService } from '../notifications/notification.service.js';
 
 @Injectable()
 export class CommentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async create(
     ticketId: number,
@@ -28,12 +32,17 @@ export class CommentsService {
           : {
               id: ticketId,
             },
+          select: {
+            id: true,
+            createdById: true,
+            assignedToId: true,
+          },
     });
 
     if (!ticket) {
       throw new NotFoundException('El ticket no existe');
     }
-    return this.prisma.comment.create({
+    const comment = await this.prisma.comment.create({
       data: {
         content: createCommentDto.content,
         ticketId: ticket.id,
@@ -51,6 +60,23 @@ export class CommentsService {
         },
       },
     });
+    const usuarioNotificar = new Set<number>();
+    if (ticket.createdById !== userId) {
+      usuarioNotificar.add(ticket.createdById);
+    }
+    if (ticket.assignedToId && ticket.assignedToId !== userId) {
+      usuarioNotificar.add(ticket.assignedToId);
+    }
+    // Notificar a los usuarios correspondientes
+    for (const destinatarioId of usuarioNotificar) {
+      await this.notificationService.enviar(
+        destinatarioId,
+        `Nuevo comentario en el ticket #${ticket.id}`,
+        NotificationType.NUEVO_COMENTARIO,
+        ticket.id,
+      );
+    }
+    return comment;
   }
 
   async findHistorial(ticketId: number, userId: number, role: Role) {

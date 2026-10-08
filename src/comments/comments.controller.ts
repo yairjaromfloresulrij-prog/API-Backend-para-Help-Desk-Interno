@@ -8,12 +8,14 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { CommentsService } from './comments.service.js';
 import { CreateCommentDto } from './dto/create-comment.dto.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { Role } from '../generated/prisma/enums.js';
 
+@ApiBearerAuth()
 @Controller('tickets/:ticketId/comments')
 @UseGuards(JwtAuthGuard)
 export class CommentsController {
